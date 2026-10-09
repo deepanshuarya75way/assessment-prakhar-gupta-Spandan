@@ -411,4 +411,75 @@ router.patch("/registrations/:id", isAdmin, async (req, res) => {
   }
 });
 
+router.post("/attendance/scan", isAdmin, async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) {
+            return res.status(400).json({
+                message: "Attendance token is required"
+            });
+        }
+        const registration = await Registration.findOneAndUpdate(
+            {
+                attendanceToken: token,
+                attendedAt: null,
+                status: { $ne: "cancelled" }
+            },
+            {
+                $set: {
+                    attendedAt: new Date(),
+                    attendedBy: req.user._id
+                }
+            },
+            { new: true }
+        ).populate("user", "name email")
+         .populate("event", "title name");
+
+        if (!registration) {
+            const existing = await Registration.findOne({
+                attendanceToken: token
+            });
+
+            if (!existing) {
+                return res.status(404).json({
+                    message: "Invalid QR code or registration not found"
+                });
+            }
+
+            if (existing.status === "cancelled") {
+                return res.status(400).json({
+                    message: "Cancelled registrations cannot attend"
+                });
+            }
+
+            if (existing.attendedAt) {
+                return res.status(409).json({
+                    message: "Attendance has already been marked"
+                });
+            }
+
+            return res.status(400).json({
+                message: "Unable to mark attendance"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Attendance marked successfully",
+            attendance: {
+                participant: registration.user,
+                event: registration.event,
+                attendedAt: registration.attendedAt
+            }
+        });
+    } catch (error) {
+        console.error("Attendance scan error:", error);
+
+        return res.status(500).json({
+            message: "Failed to mark attendance"
+        });
+    }
+});
+
+
 module.exports = router;

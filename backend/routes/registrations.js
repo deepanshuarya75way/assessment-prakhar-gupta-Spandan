@@ -214,14 +214,21 @@ router.get("/my/all", isAuthenticated, async (req, res) => {
       .populate("event", "title date venue category image isListed")
       .sort({ createdAt: -1 });
 
-    const result = registrations.map((reg) => {
-      const isLeader = String(reg.user) === String(req.user._id);
-      return {
-        ...reg.toObject(),
-        isLeader,
-        canCancel: isLeader,
-      };
-    });
+    const result = await Promise.all(
+      registrations.map(async(reg)=>{
+        if(!reg.attendanceToken){
+          reg.attendanceToken=require("crypto").randomUUID();
+          await reg.save();
+        }
+        const isLeader=String(reg.user)===String(req.user._id);
+        return{
+          ...reg.toObject(),
+          isLeader,
+          canCancel:isLeader,
+        };
+      })
+    )
+    
 
     res.json(result);
   } catch (err) {
@@ -251,6 +258,26 @@ router.delete("/:eventId", isAuthenticated, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.get("/my/attendance",isAuthenticated,async(req,res)=>{
+  try{
+    const registrations=await Registration.find({
+      $or:[
+        {user:req.user._id},
+        {"teamMembers.pid":req.user.pid}
+      ],
+      attendedAt:{$ne:null},
+      status:{$ne:"cancelled"}
+    }).populate("event","title date venue category image")
+    .sort({attendedAt:-1});
+    res.json(registrations);
+  }catch(err){
+    console.error("Attendance history error:",err);
+    res.status(500).json({
+      error:"Failed to Load attendance history"
+    })
+  }
+})
 
 module.exports = router;
 

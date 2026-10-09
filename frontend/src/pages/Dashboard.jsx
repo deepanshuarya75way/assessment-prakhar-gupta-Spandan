@@ -4,11 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
 import { FiCalendar, FiMapPin, FiX, FiCopy, FiDownload } from "react-icons/fi";
+import React from "react";
+import {QRCodeSVG} from "qrcode.react";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attendanceHistory, setAttendanceHistory]=useState([]);
   const visibleRegistrations = registrations.filter((r) => r?.event);
 
   useEffect(() => {
@@ -17,6 +20,18 @@ export default function Dashboard() {
       .catch(() => toast.error("Failed to load registrations"))
       .finally(() => setLoading(false));
   }, []);
+  useEffect(()=>{
+    const fetchAttendanceHistory=async()=>{
+      try{
+        const{data}=await API.get("/registrations/my/attendance");
+        setAttendanceHistory(data);
+      }catch(error){
+        console.error("Failed to Load attendance history",error);
+      }
+    }
+    fetchAttendanceHistory();
+
+  },[]);
 
   const handleCancel = async (eventId) => {
     if (!confirm("Cancel this registration?")) return;
@@ -330,6 +345,25 @@ export default function Dashboard() {
                 >
                   <FiX size={16} />
                 </button>
+                {reg.attendanceToken && (
+                <div className="mt-4 border-t border-gray-700 pt-4">
+                    <p className="mb-2 text-sm text-gray-300">
+                        Event Attendance QR Code
+                    </p>
+
+                    <div className="inline-block rounded-lg bg-white p-3">
+                        <QRCodeSVG
+                            value={reg.attendanceToken}
+                            size={160}
+                            level="H"
+                        />
+                    </div>
+
+                    <p className="mt-2 text-xs text-gray-400">
+                        Show this QR code to the event organizer.
+                    </p>
+                </div>
+              )}
               </div>
             ))}
           </div>

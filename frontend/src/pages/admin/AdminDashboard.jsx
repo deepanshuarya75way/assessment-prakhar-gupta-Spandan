@@ -83,6 +83,11 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-[#41431B] text-lg">Announcements</h3>
           <p className="text-[#41431B]/80 text-sm mt-1">Send scrolling alerts visible below the navbar to all visitors</p>
         </Link>
+        <Link to="/admin/attendance" className="card p-6 hover:border-[#4143B]/40 transition group">
+          <FiCheckSquare className="text-[#41431B] mb-3" size={24}/>
+          <h3 className="font-bold text-[#41431B] text-lg">Scan QR</h3>
+          <p className="font-bold text-[#41431B]/80 text-sm mt-1">Scan participant QR code and mark attendance</p>
+        </Link>
       </div>
     </div>
   );

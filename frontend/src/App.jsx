@@ -22,6 +22,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import ManageRules from "./pages/admin/ManageRules";
 import ManageNotifications from "./pages/admin/ManageNotifications";
 import Rulebook from "./pages/Rulebook";
+import AttendanceScanner from "./pages/AttendanceScanner";
 
 export default function App() {
   const { loading } = useAuth();
@@ -75,6 +76,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/attendance"
+          element={
+            <AdminRoute>
+              <AttendanceScanner/>
             </AdminRoute>
           }
         />
@@ -141,3 +150,5 @@ export default function App() {
     </div>
   );
 }
+//This is a comment
+//

@@ -7,6 +7,20 @@ const registrationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    attendanceToken:{
+      type:String,
+      unique:true,
+      sparse:true
+    },
+    attendedAt:{
+      type:Date,
+      default:null
+    },
+    attendedBy:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"User",
+      default:null
+    },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
@@ -58,6 +72,12 @@ registrationSchema.pre("save", async function (next) {
       if (!isNaN(num)) nextNum = num + 1;
     }
     this.tid = `TID26${String(nextNum).padStart(4, "0")}`;
+  }
+  next();
+});
+registrationSchema.pre("save",function(next){
+  if(!this.attendanceToken){
+    this.attendanceToken=require("crypto").randomUUID();
   }
   next();
 });
